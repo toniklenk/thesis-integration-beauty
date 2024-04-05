@@ -25,20 +25,24 @@ class ImageDataset(object):
         self.img_dir  = img_dir
         self.img_list =  sorted(dir_img_list)
         self.img_count = len(dir_img_list)
-
         if beauty_ratings_path is not None:
             self.beauty_ratings = pd.read_csv(beauty_ratings_path, header=None).mean(axis=1)
 
-    def __iter__(self):
+    def __iter__(self, transform = lambda x: x):
+        """Initialize a iterator for one iteration over the dataset in alpha numerical order of image names"""
         self.img_pos = 0
+        self.transform = transform #option to apply a transformation to all images, applies only for this iterator
+
         return self
     
     def __next__(self):
         if self.img_pos < self.img_count:
             img = Image.open(os.path.join(self.img_dir, self.img_list[self.img_pos]))
             self.img_pos += 1
-            return img
+            return self.transform(img)
         else:
+            self.img_pos = 0
+            self.transform = lambda x: x
             raise StopIteration
 
 
@@ -100,14 +104,18 @@ class IntegrationCalculator(object):
 
 
 
-class MetricsCorrelationCalculator(object):
-    
-    def __init(self):
-        pass
+#class MetricsCorrelationCalculator(object):
+#    def __init(self):
+#        pass
 
-    def correlate_integration(self):
-        """Correlate integration and beauty"""
-        pass
+def correlate_integration_beauty(dataset_iterator, integration_values):
+    """Correlate integration and beauty
+        Input:
+            dataset_iterator: class ImageDataset iterator with optionally specified image transformation
+            integration_calculator: 
+    """
+
+    pass
 
 
 class GLM_Calculator(object):
