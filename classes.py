@@ -94,7 +94,7 @@ class IntegrationCalculator(object):
         for layer in img_act.keys():
             img12avg_act[layer] = torch.stack((img1_act[layer], img2_act[layer]), dim=0).mean(dim=0)
         
-        # integration
+        # calculate integration coefficient
         integration = { k:None for k in img_act.keys()}
 
         for (layer_name, a1, a2) in zip(integration.keys(), img_act.values(), img12avg_act.values()):
@@ -108,14 +108,20 @@ class IntegrationCalculator(object):
 #    def __init(self):
 #        pass
 
-def correlate_integration_beauty(dataset_iterator, integration_values):
-    """Correlate integration and beauty
+def calculate_dataset_integration(dataset_iterator, integration_calculator: IntegrationCalculator):
+    """Calculate integration for whole dataset
         Input:
-            dataset_iterator: class ImageDataset iterator with optionally specified image transformation
-            integration_calculator: 
+            dataset_iterator: class ImageDataset iterator that optionally specifies a image transformation
+            integration: Integration calculator object that specifies DNN, layer to use and integration calculation procedure
     """
+    lst = []
+    for img in dataset_iterator:
+        lst.append(integration_calculator.integration_coeff(img))
 
-    pass
+    return pd.DataFrame(lst, columns=integration_calculator.evalutation_layers)
+
+def correlate_integration_beauty(integration_ratings: pd.DataFrame, beauty_ratings: pd.DataFrame):
+    return integration_ratings.aggregate(lambda x: pearsonr(x, beauty_ratings)[0], axis= 0)
 
 
 class GLM_Calculator(object):

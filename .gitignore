@@ -1,3 +1,6 @@
 data
 behavior
 __pycache__
+*.prototxt
+*.caffemodel
+caffemodel2pytorch.py
