@@ -1,8 +1,15 @@
+# downloaded data
 data
 behavior
-__pycache__
+
+# ignore downloaded models
+*.proto
 *.prototxt
 *.caffemodel
 *.h5
 *.pt
+
+# 
 caffemodel2pytorch.py
+main.py
+__pycache__
