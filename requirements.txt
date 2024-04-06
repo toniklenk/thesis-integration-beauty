@@ -1,0 +1,3 @@
+# requirements for conda env
+
+protobuf<3.20 #only needed for importing caffe models

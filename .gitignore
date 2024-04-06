@@ -3,4 +3,6 @@ behavior
 __pycache__
 *.prototxt
 *.caffemodel
+*.h5
+*.pt
 caffemodel2pytorch.py
