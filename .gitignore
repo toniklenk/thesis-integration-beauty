@@ -1,6 +1,7 @@
 # downloaded data
 data
 behavior
+results
 
 # ignore downloaded models
 *.proto

@@ -4,6 +4,7 @@ from os.path import isfile, join
 import pandas as pd
 import numpy as np
 
+
 from PIL import Image
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -89,16 +90,16 @@ class IntegrationCalculator(object):
         img1_act = self.net(img1)
         img2_act = self.net(img2)
         
-        img12avg_act = { k:None for k in img_act.keys()}
+        img12avg_act = { layer:None for layer in img_act.keys()}
 
         for layer in img_act.keys():
             img12avg_act[layer] = torch.stack((img1_act[layer], img2_act[layer]), dim=0).mean(dim=0)
         
         # calculate integration coefficient
-        integration = { k:None for k in img_act.keys()}
+        integration = { layer:None for layer in img_act.keys()}
 
-        for (layer_name, a1, a2) in zip(integration.keys(), img_act.values(), img12avg_act.values()):
-            integration[layer_name] = -pearsonr(a1.flatten(), a2.flatten())[0]
+        for (layer, act1, act2) in zip(integration.keys(), img_act.values(), img12avg_act.values()):
+            integration[layer] = -pearsonr(act1.flatten(), act2.flatten())[0]
 
         return integration
 
@@ -113,6 +114,9 @@ def calculate_dataset_integration(dataset_iterator, integration_calculator: Inte
         Input:
             dataset_iterator: class ImageDataset iterator that optionally specifies a image transformation
             integration: Integration calculator object that specifies DNN, layer to use and integration calculation procedure
+        
+        Output:
+            DataFrame: images x layers
     """
     lst = []
     for img in dataset_iterator:
