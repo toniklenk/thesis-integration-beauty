@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.io import read_image
 from torchvision.models.feature_extraction import create_feature_extractor
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 import torchvision.transforms.functional as TF
 
 
@@ -133,4 +133,69 @@ class GLM_Calculator(object):
         """Configure GLM"""
         pass
 
+
+
+
+
+
+
+
+# --- extra class for integration in vgg16 due to different input image size and
+# --- requirement of torch.no_grad()
+class IntegrationCalculatorVGG16(object):
+    def __init__(self, net, evaluation_layers_dict: dict):
+        """
+        Initialise with full PyTorch network model and layer names as in:
+        _, eval_nodes = get_graph_node_names(net)
+        
+        ...and in the same structure as in the return_nodes dict in:
+        https://pytorch.org/vision/stable/feature_extraction.html#api-reference
+        
+        """
+        self.net = create_feature_extractor(net, return_nodes=evaluation_layers_dict)
+        self.evalutation_layers = evaluation_layers_dict.keys()
+
+
+
+    def __image_parts(self, img):
+        pattern = self.__checkerboard(4)
+        img = np.array(img)
+        img_1, img_2 = np.where(pattern, img, 128), np.where(~pattern, img, 128)
+        img_1, img_2 = Image.fromarray(img_1), Image.fromarray(img_2)
+        return img_1, img_2 
+    
+    def __checkerboard(self, scale, output_size=224):
+        board = np.indices((scale,scale)).sum(axis=0) % 2
+        board = board.repeat(output_size/scale,axis=0).repeat(output_size/scale, axis=1)
+        board = board[:,:, np.newaxis,].repeat(3,axis=2)
+        return board.astype(dtype = np.bool_)
+
+
+    def integration_coeff(self, img):
+        # TODO: can probably remove Image format much earlier and do all operations with tensors
+        img = img.resize((224,224))
+        img1, img2 = self.__image_parts(img)
+        img, img1, img2 = TF.to_tensor(img).unsqueeze(0), TF.to_tensor(img1).unsqueeze(0), TF.to_tensor(img2).unsqueeze(0)
+
+        with torch.no_grad():
+            # activation for full image
+            img_act = self.net(img)
+            
+            # average activation of image parts
+            img1_act = self.net(img1)
+            img2_act = self.net(img2)
+            
+            img12avg_act = { layer:None for layer in img_act.keys()}
+
+            for layer in img_act.keys():
+                img12avg_act[layer] = torch.stack((img1_act[layer], img2_act[layer]), dim=0).mean(dim=0)
+            
+            # calculate integration coefficient
+            integration = { layer:None for layer in img_act.keys()}
+            
+
+            for (layer, act1, act2) in zip(integration.keys(), img_act.values(), img12avg_act.values()):
+                integration[layer] = -pearsonr(act1.flatten(), act2.flatten())[0]
+
+        return integration
     
