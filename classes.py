@@ -80,12 +80,10 @@ class IntegrationCalculator(object):
         img, img1, img2 = img.unsqueeze(0), img1.unsqueeze(0), img2.unsqueeze(0) 
 
         
-        # activation for full image
-        img_act = self.net(img)
-        
-        # average activation of image parts
-        img1_act, img2_act = self.net(img1), self.net(img2)
+        # activations for full image and image parts
+        img_act, img1_act, img2_act = self.net(img), self.net(img1), self.net(img2)
 
+        # average activation for image parts
         img12avg_act = { layer:None for layer in img_act.keys()}
         for layer in img_act.keys():
             img12avg_act[layer] = torch.stack((img1_act[layer], img2_act[layer]), dim=0).mean(dim=0)
@@ -94,7 +92,7 @@ class IntegrationCalculator(object):
         integration = { layer:None for layer in img_act.keys()}
 
         for (layer, act1, act2) in zip(integration.keys(), img_act.values(), img12avg_act.values()):
-            
+
             integration[layer] = -pearsonr(act1.flatten(), act2.flatten())[0]
 
         return integration
