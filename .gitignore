@@ -2,6 +2,7 @@
 data
 behavior
 results
+stimuli_places1_resized
 
 # ignore downloaded models
 *.proto
@@ -9,6 +10,7 @@ results
 *.caffemodel
 *.h5
 *.pt
+*.mat
 
 # 
 caffemodel2pytorch.py
