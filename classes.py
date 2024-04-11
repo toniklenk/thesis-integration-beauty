@@ -1,13 +1,9 @@
 import os
-from os.path import isfile, join
-
 import pandas as pd
 import numpy as np
 
 
-from PIL import Image
 import torch
-from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision.models.feature_extraction import create_feature_extractor
 from scipy.stats import pearsonr, spearmanr
@@ -62,27 +58,17 @@ class IntegrationCalculator(object):
         self.net = create_feature_extractor(net, return_nodes=evaluation_layers_dict)
         self.evalutation_layers = evaluation_layers_dict.keys()
 
-    def __checkerboard(self, scale, output_size=224):
-        board = np.indices((scale,scale)).sum(axis=0) % 2
-        board = board.repeat(output_size/scale,axis=0).repeat(output_size/scale, axis=1)
-        board = board[np.newaxis, :,:].repeat(3,axis=0)
-        return board.astype(dtype = np.bool_)
 
     def integration_coeff(self, img):
-        img = torchvision.transforms.Resize((224,224))(img)
-        
-        # calculate image parts
-        pattern = self.__checkerboard(2)
-
-        img1, img2 = img.clone(), img.clone()
-        img1[~pattern], img2[pattern] = 127, 127
-
+        # TODO import image versions from matlab
+        # TODO export activations to matlab for calculations
         img, img1, img2 = img.unsqueeze(0), img1.unsqueeze(0), img2.unsqueeze(0) 
 
         
         # activations for full image and image parts
         img_act, img1_act, img2_act = self.net(img), self.net(img1), self.net(img2)
 
+        
         # average activation for image parts
         img12avg_act = { layer:None for layer in img_act.keys()}
         for layer in img_act.keys():
@@ -151,24 +137,9 @@ class IntegrationCalculatorVGG16(object):
         self.evalutation_layers = evaluation_layers_dict.keys()
 
 
-
-    def __image_parts(self, img):
-        pattern = self.__checkerboard(4)
-        img = np.array(img)
-        img_1, img_2 = np.where(pattern, img, 128), np.where(~pattern, img, 128)
-        img_1, img_2 = Image.fromarray(img_1), Image.fromarray(img_2)
-        return img_1, img_2 
-    
-    def __checkerboard(self, scale, output_size=224):
-        board = np.indices((scale,scale)).sum(axis=0) % 2
-        board = board.repeat(output_size/scale,axis=0).repeat(output_size/scale, axis=1)
-        board = board[:,:, np.newaxis,].repeat(3,axis=2)
-        return board.astype(dtype = np.bool_)
-
-
     def integration_coeff(self, img):
-        # TODO: can probably remove Image format much earlier and do all operations with tensors
-        img = img.resize((224,224))
+        # TODO import image versions from matlab
+        # TODO export activations to matlab for calculations
         img1, img2 = self.__image_parts(img)
         img, img1, img2 = TF.to_tensor(img).unsqueeze(0), TF.to_tensor(img1).unsqueeze(0), TF.to_tensor(img2).unsqueeze(0)
 
