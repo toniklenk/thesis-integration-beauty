@@ -12,8 +12,14 @@ from scipy.io import loadmat
 
 class ImageDataset(object):
     """
-    Iterator for Image dataset.
-    Ensures to iaterating images in same order as corresponding beauty ratings in file (alphanumerical order).
+    Handles preparing images for input into activation extractors:
+        
+        - Load images (matlab arrays) from subfolder,
+            in alphanumerical order (corresponding to beauty ratings in file).
+        
+        - Transform into PyTorch format
+    
+    This class provides a iterator to do so.
     """
     def __init__(self, img_dir, beauty_ratings_path=None):
 
@@ -25,13 +31,12 @@ class ImageDataset(object):
             self.beauty_ratings = pd.read_csv(beauty_ratings_path, header=None).mean(axis=1)
 
     def __iter__(self, transform = lambda x: x):
-        """Iterator for one iteration over the dataset in alpha numerical order of image names"""
         self.img_pos = 0
         return self
     
     def __next__(self):
         if self.img_pos < self.img_count:
-            # load arrays transformed in matlab
+            # load arrays (transformed in matlab)
             img_full = loadmat(os.path.join(self.img_dir,'full', self.img_list[self.img_pos]))["im"]
             img_v1 = loadmat(os.path.join(self.img_dir,'version1', self.img_list[self.img_pos]))["imv1"]
             img_v2 = loadmat(os.path.join(self.img_dir,'version2', self.img_list[self.img_pos]))["imv2"]

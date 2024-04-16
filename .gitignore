@@ -1,6 +1,9 @@
 # downloaded data
-data
-stimuli_places1_resized
+data_224x224
+data_256x256
+behavior
+results
+results_vgg16
 
 # ignore downloaded models
 *.proto
@@ -13,5 +16,5 @@ stimuli_places1_resized
 # 
 caffemodel2pytorch.py
 main.py
-helpers.py
+sandbox.ipynb
 __pycache__
