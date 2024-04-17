@@ -1,3 +1,3 @@
 {
-    "python.defaultInterpreterPath": "/home/max/miniconda3/envs/PytorchEnv/bin/python",
+    "python.defaultInterpreterPath": "/home/max/miniconda3/envs/PytorchEnv/bin/python3",
 }

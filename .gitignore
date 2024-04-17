@@ -12,6 +12,7 @@ results_vgg16
 *.h5
 *.pt
 *.mat
+*.csv
 
 # 
 caffemodel2pytorch.py

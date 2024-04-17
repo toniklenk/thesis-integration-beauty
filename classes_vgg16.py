@@ -1,12 +1,8 @@
 import os
 import pandas as pd
-import numpy as np
 
 import torch
-import torchvision
-from torchvision.models.feature_extraction import create_feature_extractor
 from scipy.stats import pearsonr, spearmanr
-import torchvision.transforms.functional as TF
 from scipy.io import loadmat
 
 
@@ -54,7 +50,7 @@ class ImageDataset(object):
 
 # --- Correlation (-Integration)
 def correlation_coeff(net, img_full, img_v1, img_v2):
-    """Calculate integration coefficient"""    
+    """Calculate correlation coefficient between full and average activation pattern"""    
     # activations for full image and image parts
     with torch.no_grad():
         act_full, act_v1, act_v2 = net(img_full), net(img_v1), net(img_v2)
