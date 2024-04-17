@@ -50,21 +50,91 @@ class ImageDataset(object):
 
 
 
-# --- Correlation (-Integration)
-def correlation_coeff(net, img_full, img_v1, img_v2):
-    """Calculate correlation coefficient between full and average activation pattern"""    
+def calculate_image_metrics(net, img_full, img_v1, img_v2):
+    """Calculate correlation coefficients for all layers between full and average activation pattern"""
+    """Calculate image self-similarity"""
+    """Calculate imgage L2-norm"""
+
     # activations for full image and image parts
     with torch.no_grad():
         act_full, act_v1, act_v2 = net(img_full), net(img_v1), net(img_v2)
 
-    integration = {}
+    correlations, selfsimilarity, l2norm = {}, {}, {}
+
+    for (layer, act_full_, act_v1_, act_v2_) in zip(act_full.keys(), act_full.values(), act_v1.values(), act_v2.values()):
+        # average activation for image parts
+        act_avg_ = torch.stack((act_v1_, act_v2_), dim=0).mean(dim=0).flatten()
+        
+        l2norm[layer] = act_full_.norm(p=2).item()
+
+        act_v1_ = act_v1_.flatten()
+        act_v2_ = act_v2_.flatten()
+        act_full_ = act_full_.flatten()
+
+        correlations[layer] = pearsonr(act_full_, act_avg_)[0]
+
+        selfsimilarity[layer] = pearsonr(act_v1_, act_v2_)[0]
+
+
+    return correlations, selfsimilarity, l2norm
+
+
+def calculate_dataset_metrics(ImageDataset_iterator, net):
+    """Calculate metrics for whole dataset"""
+    lst_correlation, lst_selfsimilarity, lst_l2norm = [],[],[]
+
+    for img_full, img_v1, img_v2 in ImageDataset_iterator:
+        correlation, selfsimilarity, l2norm = calculate_image_metrics(net, img_full, img_v1, img_v2)
+
+        lst_correlation.append(correlation)
+        lst_selfsimilarity.append(selfsimilarity)
+        lst_l2norm.append(l2norm)
+    
+    column_names = list(net(torch.zeros(1,3,256,256)).keys())
+    return pd.DataFrame(lst_correlation, columns=column_names), pd.DataFrame(lst_selfsimilarity, columns=column_names), pd.DataFrame(lst_l2norm, columns=column_names)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# --- Correlation (-Integration)
+def correlation_coeff(net, img_full, img_v1, img_v2):
+    """Calculate correlation coefficients for all layers between full and average activation pattern"""    
+    # activations for full image and image parts
+    with torch.no_grad():
+        act_full, act_v1, act_v2 = net(img_full), net(img_v1), net(img_v2)
+
+    correlations = {}
     for (layer, act_full_, act_v1_, act_v2_) in zip(act_full.keys(), act_full.values(), act_v1.values(), act_v2.values()):
         # average activation for image parts
         act_avg_ = torch.stack((act_v1_, act_v2_), dim=0).mean(dim=0).flatten()
         act_full_ = act_full_.flatten()
-        integration[layer] = pearsonr(act_full_, act_avg_)[0]
+        correlations[layer] = pearsonr(act_full_, act_avg_)[0]
 
-    return integration
+    return correlations
 
 
 def calculate_dataset_correlation(ImageDataset_iterator, net):
